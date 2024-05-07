@@ -4,14 +4,12 @@ from django.contrib.auth.models import AbstractUser
 ROLES = (
     ('cliente', 'Cliente'),
     ('administrador', 'Administrador'),
-    # Add more roles as needed
 )
 
 METODOS_PAGO = (
     ('efectivo', 'Efectivo'),
     ('tarjeta_credito', 'Tarjeta de Crédito'),
     ('tarjeta_debito', 'Tarjeta de Débito'),
-    # Add more payment methods as needed
 )
 
 ESTADOS_PEDIDO = (
@@ -45,14 +43,14 @@ class Usuario(AbstractUser):
 
     groups = models.ManyToManyField(
         'auth.Group', 
-        related_name='custom_user_groups',  # Change here
+        related_name='custom_user_groups',
         blank=True,
         help_text='The groups this user belongs to.',
         verbose_name='groups'
     )
     user_permissions = models.ManyToManyField(
         'auth.Permission',
-        related_name='custom_user_permissions',  # Change here
+        related_name='custom_user_permissions',
         blank=True,
         help_text='Specific permissions for this user.',
         verbose_name='user permissions'
@@ -64,18 +62,14 @@ class Usuario(AbstractUser):
     codigo_postal = models.IntegerField()
     telefono = models.CharField(max_length=20)
     correo_electronico = models.EmailField(unique=True)
-    contrasena = models.CharField(max_length=255)
     rol = models.CharField(max_length=50, choices=ROLES)
-
-    USERNAME_FIELD = 'correo_electronico'
-    REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
-
+    
 class Pedido(models.Model):
     cliente = models.ForeignKey(Usuario, on_delete=models.CASCADE)
     fecha_pedido = models.DateField()
     direccion_envio = models.CharField(max_length=255)
     direccion_facturacion = models.CharField(max_length=255)
-    metodo_pago = models.CharField(max_length=50, choices=METODOS_PAGO)  # Cambiado de enum a CharField
+    metodo_pago = models.CharField(max_length=50, choices=METODOS_PAGO)
     precio_total = models.DecimalField(max_digits=10, decimal_places=2)
     estado_pedido = models.CharField(max_length=100, choices=ESTADOS_PEDIDO)
 
