@@ -1,11 +1,11 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import Producto, Usuario, Pedido, DetallePedido, Reembolso, Reseña
+from .models import *
 
 # Personalización del modelo Usuario
 class UsuarioAdmin(UserAdmin):
     model = Usuario
-    list_display = ['username', 'first_name', 'last_name', 'correo_electronico', 'rol', 'ciudad', 'pais']
+    list_display = ['username', 'first_name', 'last_name', 'rol', 'ciudad', 'pais']
     list_filter = ['rol', 'is_staff', 'is_active', 'ciudad', 'pais']
     search_fields = ['username', 'first_name', 'last_name', 'correo_electronico']
     ordering = ['username']
@@ -44,6 +44,25 @@ class ReseñaAdmin(admin.ModelAdmin):
     search_fields = ['producto__nombre_producto', 'cliente__username', 'comentario']
     ordering = ['fecha_reseña']
 
+class CarritoAdmin(admin.ModelAdmin):
+    list_display = ('get_cliente', 'get_producto')
+
+    def get_cliente(self, obj):
+        return obj.user.username  # Assuming 'user' is the foreign key to the user model
+    get_cliente.short_description = 'Cliente' 
+
+    def get_producto(self, obj): 
+        # Replace this with code to retrieve the first related product, 
+        # ...or a suitable representation
+        return obj.productocarrito_set.first().producto.nombre_producto  
+    get_producto.short_description = 'Producto'
+
+class ProductoCarritoAdmin(admin.ModelAdmin):
+    list_display = ['producto', 'cantidad']
+    list_filter = ['producto']
+    search_fields = ['producto__nombre_producto']
+    ordering = ['producto']
+
 # Registro de modelos en el panel de administración
 admin.site.register(Usuario, UsuarioAdmin)
 admin.site.register(Producto, ProductoAdmin)
@@ -51,3 +70,5 @@ admin.site.register(Pedido, PedidoAdmin)
 admin.site.register(DetallePedido, DetallePedidoAdmin)
 admin.site.register(Reembolso, ReembolsoAdmin)
 admin.site.register(Reseña, ReseñaAdmin)
+admin.site.register(Carrito, CarritoAdmin)
+admin.site.register(ProductoCarrito, ProductoCarritoAdmin)

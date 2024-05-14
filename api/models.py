@@ -1,5 +1,6 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, Group, Permission, PermissionsMixin
+from .managers import UsuarioManager
 
 ROLES = (
     ('cliente', 'Cliente'),
@@ -9,7 +10,6 @@ ROLES = (
 METODOS_PAGO = (
     ('efectivo', 'Efectivo'),
     ('tarjeta_credito', 'Tarjeta de Crédito'),
-    ('tarjeta_debito', 'Tarjeta de Débito'),
 )
 
 ESTADOS_PEDIDO = (
@@ -39,30 +39,25 @@ class Producto(models.Model):
     stock = models.IntegerField()
     imagen = models.ImageField(upload_to='productos/', blank=True)
 
-class Usuario(AbstractUser):
+class Usuario(AbstractUser, PermissionsMixin):
 
-    groups = models.ManyToManyField(
-        'auth.Group', 
-        related_name='custom_user_groups',
-        blank=True,
-        help_text='The groups this user belongs to.',
-        verbose_name='groups'
-    )
-    user_permissions = models.ManyToManyField(
-        'auth.Permission',
-        related_name='custom_user_permissions',
-        blank=True,
-        help_text='Specific permissions for this user.',
-        verbose_name='user permissions'
-    )
+     
+    email = models.EmailField(unique=True)
+
+    groups = models.ManyToManyField(Group, related_name='customuser_set')
+    user_permissions = models.ManyToManyField(Permission, related_name='customuser_set')
     
     direccion = models.CharField(max_length=255)
     ciudad = models.CharField(max_length=255)
     pais = models.CharField(max_length=255)
     codigo_postal = models.IntegerField()
     telefono = models.CharField(max_length=20)
-    correo_electronico = models.EmailField(unique=True)
     rol = models.CharField(max_length=50, choices=ROLES)
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username', 'password', 'codigo_postal']
+
+    objects = UsuarioManager()
     
 class Pedido(models.Model):
     cliente = models.ForeignKey(Usuario, on_delete=models.CASCADE)
@@ -91,3 +86,12 @@ class Reseña(models.Model):
     calificacion = models.IntegerField()
     comentario = models.TextField()
     fecha_reseña = models.DateField()
+
+class Carrito(models.Model):
+    usuario = models.OneToOneField(Usuario, on_delete=models.CASCADE)
+    creado_en = models.DateTimeField(auto_now_add=True)
+
+class ProductoCarrito(models.Model):
+    carrito = models.ForeignKey(Carrito, on_delete=models.CASCADE)
+    producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
+    cantidad = models.IntegerField(default=1)
