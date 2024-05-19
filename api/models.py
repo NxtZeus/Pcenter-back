@@ -79,7 +79,7 @@ class Reseña(models.Model):
     cliente = models.ForeignKey(Usuario, on_delete=models.CASCADE)
     calificacion = models.IntegerField()
     comentario = models.TextField()
-    fecha_reseña = models.DateField()
+    fecha_reseña = models.DateTimeField(auto_now_add=True)
 
 class Carrito(models.Model):
     usuario = models.OneToOneField(Usuario, on_delete=models.CASCADE)

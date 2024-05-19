@@ -7,6 +7,7 @@ from rest_framework import status
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
+from rest_framework import permissions
 from django.contrib.auth.models import update_last_login
 from django.contrib.auth.hashers import make_password
 from django.db.models import Count
@@ -98,6 +99,29 @@ class DetailedPedidos(generics.RetrieveUpdateDestroyAPIView):
     queryset = Pedido.objects.all()
     serializer_class = PedidoSerializer
 
+@api_view(['POST'])
+def crear_pedido(request):
+    serializer = PedidoSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['PUT'])
+def modificar_pedido(request, pk):
+    pedido = get_object_or_404(Pedido, pk=pk)
+    serializer = PedidoSerializer(pedido, data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['DELETE'])
+def eliminar_pedido(request, pk):
+    pedido = get_object_or_404(Pedido, pk=pk)
+    pedido.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
 class ListDetallesPedidos(generics.ListCreateAPIView):
     queryset = DetallePedido.objects.all()
     serializer_class = DetallePedidoSerializer
@@ -117,10 +141,40 @@ class DetailedReembolsos(generics.RetrieveUpdateDestroyAPIView):
 class ListReseñas(generics.ListCreateAPIView):
     queryset = Reseña.objects.all()
     serializer_class = ReseñaSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
 class DetailedReseñas(generics.RetrieveUpdateDestroyAPIView):
     queryset = Reseña.objects.all()
     serializer_class = ReseñaSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+@api_view(['POST'])
+def crear_reseña(request):
+    serializer = ReseñaSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['PUT'])
+def modificar_reseña(request, pk):
+    reseña = get_object_or_404(Reseña, pk=pk)
+    serializer = ReseñaSerializer(reseña, data=request.data, partial=True) 
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['DELETE'])
+def eliminar_reseña(request, reseña_id):
+    reseña = get_object_or_404(Reseña, pk=reseña_id)
+    
+    # Verificar si el usuario es un administrador o el propietario de la reseña
+    if request.user.is_staff or request.user == reseña.cliente:
+        reseña.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    else:
+        return Response({"error": "No tiene permiso para eliminar esta reseña."}, status=status.HTTP_403_FORBIDDEN)
 
 class ListCarritos(generics.ListCreateAPIView):
     queryset = Carrito.objects.all()

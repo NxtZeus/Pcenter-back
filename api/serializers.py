@@ -36,8 +36,8 @@ class ReembolsoSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class ReseñaSerializer(serializers.ModelSerializer):
-    producto = ProductoSerializer(read_only=True)
-    cliente = UsuarioSerializer(read_only=True)
+    producto = serializers.PrimaryKeyRelatedField(queryset=Producto.objects.all())
+    cliente = serializers.PrimaryKeyRelatedField(queryset=Usuario.objects.all())
 
     class Meta:
         model = Reseña
