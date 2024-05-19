@@ -11,7 +11,7 @@ class ProductoSerializer(serializers.ModelSerializer):
 class UsuarioSerializer(serializers.ModelSerializer):
     class Meta:
         model = Usuario
-        fields = ['id', 'username', 'first_name', 'last_name', 'email', 'direccion', 'ciudad', 'pais', 'codigo_postal', 'telefono', 'rol', 'is_active', 'is_staff']
+        fields = ['id', 'username', 'first_name', 'last_name', 'email', 'direccion', 'ciudad', 'pais', 'codigo_postal', 'telefono', 'is_active', 'is_staff']
 
 class PedidoSerializer(serializers.ModelSerializer):
     cliente = UsuarioSerializer(read_only=True, many=True)
@@ -43,17 +43,19 @@ class ReseñaSerializer(serializers.ModelSerializer):
         model = Reseña
         fields = '__all__'
 
-class CarritoSerializer(serializers.ModelSerializer):
-    cliente = UsuarioSerializer(read_only=True)
-    producto = ProductoSerializer(read_only=True)
-
-    class Meta:
-        model = Carrito
-        fields = '__all__'
-
 class ProductoCarritoSerializer(serializers.ModelSerializer):
     producto = ProductoSerializer(read_only=True)
 
     class Meta:
+        model = ProductoCarrito
+        fields = ['id', 'producto', 'cantidad']
+
+class CarritoSerializer(serializers.ModelSerializer):
+    cliente = UsuarioSerializer(read_only=True)
+    producto = ProductoSerializer(read_only=True)
+
+    productos_carrito = ProductoCarritoSerializer(many=True, read_only=True, source='productocarrito_set')
+
+    class Meta:
         model = Carrito
-        fields = ['producto', 'cantidad']
+        fields = '__all__'

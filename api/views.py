@@ -6,22 +6,89 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view
+from rest_framework.permissions import IsAuthenticated
+from django.contrib.auth.models import update_last_login
+from django.contrib.auth.hashers import make_password
+from django.db.models import Count
+from rest_framework.exceptions import NotFound
 
 class ListUsuarios(generics.ListCreateAPIView):
-    queryset = Usuario.objects.all()
     serializer_class = UsuarioSerializer
+    permission_classes = [IsAuthenticated]
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_superuser:
+            return Usuario.objects.all()
+        else:
+            queryset = [user]
+        return queryset
 
 class DetailedUsuarios(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Usuario.objects.all()
     serializer_class = UsuarioSerializer
+    permission_classes = [IsAuthenticated]
+    def get_object(self):
+        return self.request.user
+    def delete(self, request, *args, **kwargs):
+        token = self.request.user
+        token.delete()
+        return super().delete(request, *args, **kwargs)
+    def update(self, request, *args, **kwargs):
+        user = self.get_object()
+        # Hashear la contraseña si está presente en los datos de la solicitud
+        if 'password' in request.data:
+            user = self.request.user
+            user.set_password(request.data['password'])
+            user.save()
+            request.data.pop('password')
+        return super().update(request, *args, **kwargs)
+
+    def patch(self, request, *args, **kwargs):
+        user = self.get_object()
+        # Hashear la contraseña si está presente en los datos de la solicitud
+        if 'password' in request.data:
+            user.set_password(request.data['password'])
+            user.save()
+            request.data.pop('password')
+        return self.partial_update(request, *args, **kwargs)
 
 class ListProductos(generics.ListCreateAPIView):
-    queryset = Producto.objects.all()
-    serializer_class = ProductoSerializer
+    serializer_class = PedidoSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        return Pedido.objects.filter(usuario=user)
 
 class DetailedProductos(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Producto.objects.all()
-    serializer_class = ProductoSerializer
+    queryset = Pedido.objects.all()
+    serializer_class = PedidoSerializer
+    permission_classes = [IsAuthenticated]
+
+@api_view(['POST'])
+def añadir_producto(request):
+    if request.method == 'POST':
+        serializer = ProductoSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['DELETE'])
+def eliminar_producto(request, pk):
+    if request.method == 'DELETE':
+        producto = get_object_or_404(Producto, id=pk)
+        producto.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+@api_view(['PUT'])
+def modificar_producto(request, pk):
+    if request.method == 'PUT':
+        producto = get_object_or_404(Producto, id=pk)
+        serializer = ProductoSerializer(producto, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class ListPedidos(generics.ListCreateAPIView):
     queryset = Pedido.objects.all()
@@ -71,6 +138,59 @@ class DetailedProductosCarritos(generics.RetrieveUpdateDestroyAPIView):
     queryset = ProductoCarrito.objects.all()
     serializer_class = ProductoCarritoSerializer
 
+class AgregarAlCarrito(generics.CreateAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = ProductoCarritoSerializer
+
+    def create(self, request, *args, **kwargs):
+        producto_id = request.data.get('producto_id')
+        cantidad = request.data.get('cantidad', 1)
+        producto = get_object_or_404(Producto, id=producto_id)
+
+        # Verificar si el usuario tiene un carrito existente
+        carrito, created = Carrito.objects.get_or_create(usuario=request.user)
+
+        # Asociar el carrito al usuario si es nuevo
+        if created:
+            carrito.usuario = request.user
+            carrito.save()
+
+        # Crear o actualizar el ProductoCarrito
+        producto_carrito, created = ProductoCarrito.objects.get_or_create(
+            carrito=carrito,
+            producto=producto,
+            defaults={'cantidad': cantidad}
+        )
+        if not created:
+            producto_carrito.cantidad += int(cantidad)
+            producto_carrito.save()
+
+        return Response(ProductoCarritoSerializer(producto_carrito).data, status=status.HTTP_201_CREATED)
+
+class VerCarrito(generics.RetrieveAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = CarritoSerializer
+
+    def get_object(self):
+        carrito, created = Carrito.objects.get_or_create(usuario=self.request.user)
+        if not carrito.productocarrito_set.exists():
+            raise NotFound("El carrito está vacío")
+        return carrito
+
+class QuitarDeCarrito(generics.DestroyAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, *args, **kwargs):
+        producto_id = self.kwargs.get('producto_id')  # Obtener el ID del producto de los parámetros de la URL
+
+        producto = get_object_or_404(Producto, id=producto_id)
+
+        carrito = get_object_or_404(Carrito, usuario=request.user)
+        producto_carrito = get_object_or_404(ProductoCarrito, carrito=carrito, producto=producto)
+        producto_carrito.delete()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 @api_view(['POST'])
 def registro(request):
     serializer = UsuarioSerializer(data=request.data)
@@ -86,8 +206,14 @@ def registro(request):
 @api_view(['POST'])
 def login(request):
     user = get_object_or_404(Usuario, email=request.data['email'])
+    update_last_login(None, user)
     if not user.check_password(request.data['password']):
         return Response({'details': 'Invalid credentials'}, status=status.HTTP_404_NOT_FOUND)
     token, created = Token.objects.get_or_create(user=user)
     serializer = UsuarioSerializer(instance=user)
     return Response({'pepito': token.key, 'user' : serializer.data}, status=status.HTTP_200_OK)
+
+@api_view(['POST'])
+def logout(request):
+    request.user.auth_token.delete()
+    return Response({'details': 'Logged out'}, status=status.HTTP_200_OK)

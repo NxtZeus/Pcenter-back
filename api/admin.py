@@ -5,12 +5,12 @@ from .models import *
 # Personalización del modelo Usuario
 class UsuarioAdmin(UserAdmin):
     model = Usuario
-    list_display = ['username', 'first_name', 'last_name', 'rol', 'ciudad', 'pais']
-    list_filter = ['rol', 'is_staff', 'is_active', 'ciudad', 'pais']
+    list_display = ['username', 'first_name', 'last_name', 'ciudad', 'pais']
+    list_filter = ['is_staff', 'is_active', 'ciudad', 'pais']
     search_fields = ['username', 'first_name', 'last_name', 'correo_electronico']
     ordering = ['username']
     fieldsets = UserAdmin.fieldsets + (
-        (None, {'fields': ('direccion', 'ciudad', 'pais', 'codigo_postal', 'telefono', 'rol')}),
+        (None, {'fields': ('direccion', 'ciudad', 'pais', 'codigo_postal', 'telefono')}),
     )
 
 # Registro de otros modelos

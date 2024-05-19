@@ -2,11 +2,6 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser, Group, Permission, PermissionsMixin
 from .managers import UsuarioManager
 
-ROLES = (
-    ('cliente', 'Cliente'),
-    ('administrador', 'Administrador'),
-)
-
 METODOS_PAGO = (
     ('efectivo', 'Efectivo'),
     ('tarjeta_credito', 'Tarjeta de Crédito'),
@@ -37,7 +32,7 @@ class Producto(models.Model):
     descripcion = models.TextField()
     precio = models.DecimalField(max_digits=10, decimal_places=2)
     stock = models.IntegerField()
-    imagen = models.ImageField(upload_to='productos/', blank=True)
+    imagen = models.ImageField(upload_to='productos/', blank=True, null=True)
 
 class Usuario(AbstractUser, PermissionsMixin):
 
@@ -52,7 +47,6 @@ class Usuario(AbstractUser, PermissionsMixin):
     pais = models.CharField(max_length=255)
     codigo_postal = models.IntegerField()
     telefono = models.CharField(max_length=20)
-    rol = models.CharField(max_length=50, choices=ROLES)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username', 'password', 'codigo_postal']
