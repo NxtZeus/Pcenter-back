@@ -16,12 +16,12 @@ ESTADOS_PEDIDO = (
 )
 # Categorias para productos, ordenadores(sobremesa y portatiles), mobiles, perifericos( ratones, teclados, auriculares, monitor, ), componentes de pc, accesorios, software
 CATEGORIAS_PRODUCTO = (
-    ('ordenadores', 'Ordenadores'),
-    ('mobiles', 'Mobiles'),
-    ('perifericos', 'Perifericos'),
-    ('componentes', 'Componentes'),
-    ('accesorios', 'Accesorios'),
-    ('software', 'Software'),
+    ('Ordenadores', 'ordenadores'),
+    ('Portatiles', 'portatiles', ),
+    ('Moviles', 'moviles'),
+    ('Perifericos', 'perifericos'),
+    ('Componentes', 'componentes'),
+    ('Accesorios', 'accesorios'),
 )
     
 
