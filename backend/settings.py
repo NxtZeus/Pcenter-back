@@ -25,6 +25,8 @@ environ.Env.read_env()
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env('SECRET_KEY')
 
+AUTH_USER_MODEL = 'api.Usuario'
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -112,7 +114,6 @@ DATABASES = {
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
 
-AUTH_USER_MODEL = 'api.Usuario'
 
 AUTH_PASSWORD_VALIDATORS = [
     {

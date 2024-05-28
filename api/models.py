@@ -34,9 +34,10 @@ class Producto(models.Model):
     stock = models.IntegerField()
     imagen = models.ImageField(upload_to='productos/', blank=True, null=True)
 
-class Usuario(AbstractUser, PermissionsMixin):
+    def __str__(self):
+        return self.nombre_producto
 
-     
+class Usuario(AbstractUser, PermissionsMixin):
     email = models.EmailField(unique=True)
 
     groups = models.ManyToManyField(Group, related_name='customuser_set')
@@ -84,6 +85,9 @@ class Reseña(models.Model):
 class Carrito(models.Model):
     usuario = models.OneToOneField(Usuario, on_delete=models.CASCADE)
     creado_en = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.usuario.username
 
 class ProductoCarrito(models.Model):
     carrito = models.ForeignKey(Carrito, on_delete=models.CASCADE)

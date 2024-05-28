@@ -55,12 +55,8 @@ class DetailedUsuarios(generics.RetrieveUpdateDestroyAPIView):
         return self.partial_update(request, *args, **kwargs)
 
 class ListProductos(generics.ListCreateAPIView):
-    serializer_class = PedidoSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        user = self.request.user
-        return Pedido.objects.filter(usuario=user)
+    queryset = Producto.objects.all()
+    serializer_class = ProductoSerializer
 
 class DetailedProductos(generics.RetrieveUpdateDestroyAPIView):
     queryset = Pedido.objects.all()
@@ -235,7 +231,6 @@ class VerCarrito(generics.RetrieveAPIView):
     def retrieve(self, request, *args, **kwargs):
         carrito = self.get_object()
 
-        # Añadir el precio total a los datos del carrito
         serializer = self.get_serializer(carrito)
         data = serializer.data
 

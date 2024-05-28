@@ -1,15 +1,20 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from .models import *
+from .forms import CustomUserCreationForm
 
 # Personalización del modelo Usuario
 class UsuarioAdmin(UserAdmin):
     model = Usuario
+    add_form = CustomUserCreationForm
     list_display = ['username', 'first_name', 'last_name', 'ciudad', 'pais']
     list_filter = ['is_staff', 'is_active', 'ciudad', 'pais']
-    search_fields = ['username', 'first_name', 'last_name', 'correo_electronico']
+    search_fields = ['username', 'first_name', 'last_name', 'email']
     ordering = ['username']
     fieldsets = UserAdmin.fieldsets + (
+        (None, {'fields': ('direccion', 'ciudad', 'pais', 'codigo_postal', 'telefono')}),
+    )
+    add_fieldsets = UserAdmin.add_fieldsets + (
         (None, {'fields': ('direccion', 'ciudad', 'pais', 'codigo_postal', 'telefono')}),
     )
 

@@ -52,7 +52,6 @@ class ProductoCarritoSerializer(serializers.ModelSerializer):
 
 class CarritoSerializer(serializers.ModelSerializer):
     cliente = UsuarioSerializer(read_only=True)
-    producto = ProductoSerializer(read_only=True)
 
     productos_carrito = ProductoCarritoSerializer(many=True, read_only=True, source='productocarrito_set')
 
