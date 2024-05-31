@@ -58,10 +58,16 @@ class ListProductos(generics.ListCreateAPIView):
     queryset = Producto.objects.all()
     serializer_class = ProductoSerializer
 
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context.update({
+            "request": self.request
+        })
+        return context
+
 class DetailedProductos(generics.RetrieveUpdateDestroyAPIView):
     queryset = Pedido.objects.all()
     serializer_class = PedidoSerializer
-    permission_classes = [IsAuthenticated]
 
 @api_view(['GET'])
 def list_categorias(request):
@@ -256,6 +262,9 @@ class ActualizarCantidadCarrito(generics.UpdateAPIView):
         carrito = get_object_or_404(Carrito, usuario=request.user)
         producto_carrito = get_object_or_404(ProductoCarrito, carrito=carrito, producto=producto)
         
+        if nueva_cantidad > producto.stock:
+            return Response({"detail": 'Producto no disponible en stock'}, status=status.HTTP_400_BAD_REQUEST)
+
         producto_carrito.cantidad = nueva_cantidad
         producto_carrito.save()
 

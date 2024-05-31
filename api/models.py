@@ -16,12 +16,12 @@ ESTADOS_PEDIDO = (
 )
 # Categorias para productos, ordenadores(sobremesa y portatiles), mobiles, perifericos( ratones, teclados, auriculares, monitor, ), componentes de pc, accesorios, software
 CATEGORIAS_PRODUCTO = (
-    ('Ordenadores', 'ordenadores'),
-    ('Portatiles', 'portatiles', ),
-    ('Moviles', 'moviles'),
-    ('Perifericos', 'perifericos'),
-    ('Componentes', 'componentes'),
-    ('Accesorios', 'accesorios'),
+    ('ordenadores', 'Ordenadores'),
+    ('portatiles', 'Portátiles'),
+    ('moviles', 'Moviles'),
+    ('perifericos', 'Periféricos'),
+    ('componentes', 'Componentes'),
+    ('accesorios', 'Accesorios'),
 )
     
 
@@ -39,10 +39,6 @@ class Producto(models.Model):
 
 class Usuario(AbstractUser, PermissionsMixin):
     email = models.EmailField(unique=True)
-
-    groups = models.ManyToManyField(Group, related_name='customuser_set')
-    user_permissions = models.ManyToManyField(Permission, related_name='customuser_set')
-    
     direccion = models.CharField(max_length=255)
     ciudad = models.CharField(max_length=255)
     pais = models.CharField(max_length=255)

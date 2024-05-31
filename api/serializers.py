@@ -4,6 +4,8 @@ from django.contrib.auth.password_validation import validate_password
 from .models import *
 
 class ProductoSerializer(serializers.ModelSerializer):
+    imagen = serializers.ImageField(max_length=None, use_url=True)
+
     class Meta:
         model = Producto
         fields = '__all__'
@@ -11,7 +13,7 @@ class ProductoSerializer(serializers.ModelSerializer):
 class UsuarioSerializer(serializers.ModelSerializer):
     class Meta:
         model = Usuario
-        fields = ['id', 'username', 'first_name', 'last_name', 'email', 'direccion', 'ciudad', 'pais', 'codigo_postal', 'telefono', 'is_active', 'is_staff']
+        fields = ['id', 'username', 'first_name', 'last_name', 'email', 'direccion', 'ciudad', 'pais', 'codigo_postal', 'telefono', 'is_active', 'is_staff', 'is_superuser']
 
 class PedidoSerializer(serializers.ModelSerializer):
     cliente = UsuarioSerializer(read_only=True, many=True)
