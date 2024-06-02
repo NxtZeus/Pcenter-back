@@ -14,6 +14,7 @@ from django.db.models import Count
 from rest_framework.exceptions import NotFound
 from django.contrib.auth import authenticate
 from django.db.models import Sum
+from rest_framework.filters import SearchFilter
 
 class ListUsuarios(generics.ListCreateAPIView):
     serializer_class = UsuarioSerializer
@@ -68,6 +69,12 @@ class ListProductos(generics.ListCreateAPIView):
 class DetailedProductos(generics.RetrieveUpdateDestroyAPIView):
     queryset = Pedido.objects.all()
     serializer_class = PedidoSerializer
+
+class ProductoSearchView(generics.ListAPIView):
+    queryset = Producto.objects.all()
+    serializer_class = ProductoSerializer
+    filter_backends = [SearchFilter]
+    search_fields = ['nombre_producto', 'descripcion', 'categoria', 'marca']
 
 @api_view(['GET'])
 def list_categorias(request):

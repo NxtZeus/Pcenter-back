@@ -1,74 +1,97 @@
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
-from .models import *
-from .forms import CustomUserCreationForm
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.contrib.auth.forms import ReadOnlyPasswordHashField
+from django import forms
+from .models import Usuario, Producto, Pedido, DetallePedido, Reembolso, Reseña, Carrito, ProductoCarrito
 
-# Personalización del modelo Usuario
-class UsuarioAdmin(UserAdmin):
-    model = Usuario
-    add_form = CustomUserCreationForm
-    list_display = ['username', 'first_name', 'last_name', 'ciudad', 'pais']
-    list_filter = ['is_staff', 'is_active', 'ciudad', 'pais']
-    search_fields = ['username', 'first_name', 'last_name', 'email']
-    ordering = ['username']
-    fieldsets = UserAdmin.fieldsets + (
-        (None, {'fields': ('direccion', 'ciudad', 'pais', 'codigo_postal', 'telefono')}),
-    )
-    add_fieldsets = UserAdmin.add_fieldsets + (
-        (None, {'fields': ('direccion', 'ciudad', 'pais', 'codigo_postal', 'telefono')}),
-    )
+class UsuarioCreationForm(forms.ModelForm):
+    password1 = forms.CharField(label='Password', widget=forms.PasswordInput)
+    password2 = forms.CharField(label='Password confirmation', widget=forms.PasswordInput)
+    is_superuser = forms.BooleanField(label='Superuser??', required=False)
 
-# Registro de otros modelos
+    class Meta:
+        model = Usuario
+        fields = ('email', 'first_name', 'last_name', 'direccion', 'ciudad', 'pais', 'codigo_postal', 'telefono', 'is_superuser')
+
+    def clean_password2(self):
+        password1 = self.cleaned_data.get("password1")
+        password2 = self.cleaned_data.get("password2")
+        if password1 and password2 and password1 != password2:
+            raise forms.ValidationError("Passwords don't match")
+        return password2
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.set_password(self.cleaned_data["password1"])
+        user.is_superuser = self.cleaned_data.get("is_superuser")
+        user.is_staff = self.cleaned_data.get("is_superuser")
+        if commit:
+            user.save()
+        return user
+
+class UsuarioChangeForm(forms.ModelForm):
+    password = ReadOnlyPasswordHashField()
+
+    class Meta:
+        model = Usuario
+        fields = ('email', 'first_name', 'last_name', 'direccion', 'ciudad', 'pais', 'codigo_postal', 'telefono', 'password', 'is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')
+
+    def clean_password(self):
+        return self.initial["password"]
+
+class UsuarioAdmin(BaseUserAdmin):
+    form = UsuarioChangeForm
+    add_form = UsuarioCreationForm
+
+    list_display = ('email', 'first_name', 'last_name', 'is_staff', 'is_superuser')
+    list_filter = ('is_staff', 'is_superuser', 'is_active', 'groups')
+    fieldsets = (
+        (None, {'fields': ('email', 'password')}),
+        ('Personal info', {'fields': ('first_name', 'last_name', 'direccion', 'ciudad', 'pais', 'codigo_postal', 'telefono')}),
+        ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
+        ('Important dates', {'fields': ('last_login', 'date_joined')}),
+    )
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': ('email', 'first_name', 'last_name', 'direccion', 'ciudad', 'pais', 'codigo_postal', 'telefono', 'password1', 'password2', 'is_superuser')}
+        ),
+    )
+    search_fields = ('email', 'first_name', 'last_name')
+    ordering = ('email',)
+    filter_horizontal = ('groups', 'user_permissions',)
+
 class ProductoAdmin(admin.ModelAdmin):
     list_display = ['nombre_producto', 'categoria', 'marca', 'precio', 'stock']
+    search_fields = ['nombre_producto', 'categoria', 'marca']
     list_filter = ['categoria', 'marca']
-    search_fields = ['nombre_producto', 'marca']
-    ordering = ['nombre_producto']
 
 class PedidoAdmin(admin.ModelAdmin):
-    list_display = ['cliente', 'fecha_pedido', 'direccion_envio', 'metodo_pago', 'precio_total', 'estado_pedido']
-    list_filter = ['metodo_pago', 'estado_pedido']
-    search_fields = ['cliente__username', 'direccion_envio']
-    ordering = ['fecha_pedido']
+    list_display = ['cliente', 'fecha_pedido', 'metodo_pago', 'precio_total', 'estado_pedido']
+    list_filter = ['estado_pedido', 'metodo_pago']
+    search_fields = ['cliente__email']
 
 class DetallePedidoAdmin(admin.ModelAdmin):
     list_display = ['pedido', 'producto', 'cantidad', 'precio_unidad']
-    list_filter = ['pedido', 'producto']
     search_fields = ['pedido__id', 'producto__nombre_producto']
-    ordering = ['pedido']
 
 class ReembolsoAdmin(admin.ModelAdmin):
     list_display = ['pedido', 'fecha_reembolso', 'precio_reembolso', 'motivo']
-    list_filter = ['fecha_reembolso']
-    search_fields = ['pedido__id', 'motivo']
-    ordering = ['fecha_reembolso']
+    search_fields = ['pedido__id']
 
 class ReseñaAdmin(admin.ModelAdmin):
     list_display = ['producto', 'cliente', 'calificacion', 'fecha_reseña']
-    list_filter = ['producto', 'calificacion']
-    search_fields = ['producto__nombre_producto', 'cliente__username', 'comentario']
-    ordering = ['fecha_reseña']
+    search_fields = ['producto__nombre_producto', 'cliente__email']
+    list_filter = ['calificacion']
 
 class CarritoAdmin(admin.ModelAdmin):
-    list_display = ('get_cliente', 'get_producto')
-
-    def get_cliente(self, obj):
-        return obj.user.username  # Assuming 'user' is the foreign key to the user model
-    get_cliente.short_description = 'Cliente' 
-
-    def get_producto(self, obj): 
-        # Replace this with code to retrieve the first related product, 
-        # ...or a suitable representation
-        return obj.productocarrito_set.first().producto.nombre_producto  
-    get_producto.short_description = 'Producto'
+    list_display = ['usuario', 'creado_en']
+    search_fields = ['usuario__email']
 
 class ProductoCarritoAdmin(admin.ModelAdmin):
-    list_display = ['producto', 'cantidad']
-    list_filter = ['producto']
-    search_fields = ['producto__nombre_producto']
-    ordering = ['producto']
+    list_display = ['carrito', 'producto', 'cantidad']
+    search_fields = ['carrito__usuario__email', 'producto__nombre_producto']
 
-# Registro de modelos en el panel de administración
 admin.site.register(Usuario, UsuarioAdmin)
 admin.site.register(Producto, ProductoAdmin)
 admin.site.register(Pedido, PedidoAdmin)
