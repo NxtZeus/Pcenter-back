@@ -3,8 +3,13 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from .models import *
 
+class ImagenProductoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ImagenProducto
+        fields = ['id', 'imagen']
+
 class ProductoSerializer(serializers.ModelSerializer):
-    imagen = serializers.ImageField(max_length=None, use_url=True)
+    imagenes = ImagenProductoSerializer(many=True, read_only=True)
 
     class Meta:
         model = Producto

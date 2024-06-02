@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
 from django import forms
-from .models import Usuario, Producto, Pedido, DetallePedido, Reembolso, Reseña, Carrito, ProductoCarrito
+from .models import *
 
 class UsuarioCreationForm(forms.ModelForm):
     password1 = forms.CharField(label='Password', widget=forms.PasswordInput)
@@ -61,10 +61,15 @@ class UsuarioAdmin(BaseUserAdmin):
     ordering = ('email',)
     filter_horizontal = ('groups', 'user_permissions',)
 
+class ImagenProductoInline(admin.TabularInline):
+    model = ImagenProducto
+    extra = 1
+
 class ProductoAdmin(admin.ModelAdmin):
     list_display = ['nombre_producto', 'categoria', 'marca', 'precio', 'stock']
     search_fields = ['nombre_producto', 'categoria', 'marca']
     list_filter = ['categoria', 'marca']
+    inlines = [ImagenProductoInline]
 
 class PedidoAdmin(admin.ModelAdmin):
     list_display = ['cliente', 'fecha_pedido', 'metodo_pago', 'precio_total', 'estado_pedido']

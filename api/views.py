@@ -15,6 +15,7 @@ from rest_framework.exceptions import NotFound
 from django.contrib.auth import authenticate
 from django.db.models import Sum
 from rest_framework.filters import SearchFilter
+from rest_framework.parsers import MultiPartParser, FormParser
 
 class ListUsuarios(generics.ListCreateAPIView):
     serializer_class = UsuarioSerializer
@@ -58,6 +59,20 @@ class DetailedUsuarios(generics.RetrieveUpdateDestroyAPIView):
 class ListProductos(generics.ListCreateAPIView):
     queryset = Producto.objects.all()
     serializer_class = ProductoSerializer
+    parser_classes = (MultiPartParser, FormParser,)
+
+    def create(self, request, *args, **kwargs):
+        data = request.data
+        imagenes = request.FILES.getlist('imagenes')
+
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        producto = serializer.save()
+
+        for imagen in imagenes:
+            ImagenProducto.objects.create(producto=producto, imagen=imagen)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
