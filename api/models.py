@@ -66,6 +66,9 @@ class Pedido(models.Model):
     precio_total = models.DecimalField(max_digits=10, decimal_places=2)
     estado_pedido = models.CharField(max_length=100, choices=ESTADOS_PEDIDO)
 
+    def __str__(self):
+        return f"Pedido de {self.cliente}"
+
 class DetallePedido(models.Model):
     pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE)
     producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
@@ -77,13 +80,6 @@ class Reembolso(models.Model):
     fecha_reembolso = models.DateField()
     precio_reembolso = models.DecimalField(max_digits=10, decimal_places=2)
     motivo = models.CharField(max_length=255)
-
-class Reseña(models.Model):
-    producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
-    cliente = models.ForeignKey(Usuario, on_delete=models.CASCADE)
-    calificacion = models.IntegerField()
-    comentario = models.TextField()
-    fecha_reseña = models.DateTimeField(auto_now_add=True)
 
 class Carrito(models.Model):
     usuario = models.OneToOneField(Usuario, on_delete=models.CASCADE)

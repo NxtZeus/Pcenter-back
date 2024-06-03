@@ -31,30 +31,32 @@ class ListUsuarios(generics.ListCreateAPIView):
 class DetailedUsuarios(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = UsuarioSerializer
     permission_classes = [IsAuthenticated]
+
     def get_object(self):
         return self.request.user
-    def delete(self, request, *args, **kwargs):
-        token = self.request.user
-        token.delete()
-        return super().delete(request, *args, **kwargs)
+
     def update(self, request, *args, **kwargs):
         user = self.get_object()
-        # Hashear la contraseña si está presente en los datos de la solicitud
-        if 'password' in request.data:
-            user = self.request.user
+        serializer = self.get_serializer(user, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+
+        # Verificar si se proporciona una nueva contraseña y actualizarla
+        if 'password' in request.data and request.data['password']:
             user.set_password(request.data['password'])
             user.save()
-            request.data.pop('password')
-        return super().update(request, *args, **kwargs)
+
+        serializer.save()
+        return Response(serializer.data)
 
     def patch(self, request, *args, **kwargs):
-        user = self.get_object()
-        # Hashear la contraseña si está presente en los datos de la solicitud
-        if 'password' in request.data:
-            user.set_password(request.data['password'])
-            user.save()
-            request.data.pop('password')
-        return self.partial_update(request, *args, **kwargs)
+        return self.update(request, *args, **kwargs)
+
+class UsuarioPedidosView(generics.ListAPIView):
+    serializer_class = PedidoSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Pedido.objects.filter(cliente=self.request.user)
 
 class ListProductos(generics.ListCreateAPIView):
     queryset = Producto.objects.all()
@@ -153,6 +155,47 @@ def eliminar_pedido(request, pk):
     pedido.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
 
+from django.utils import timezone
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def pago(request):
+    usuario = request.user
+    carrito = get_object_or_404(Carrito, usuario=usuario)
+    
+    if not carrito.productocarrito_set.exists():
+        return Response({'detail': 'El carrito está vacío'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    total_precio = sum(item.producto.precio * item.cantidad for item in carrito.productocarrito_set.all())
+    
+    metodo_pago = request.data.get('metodo_pago', 'tarjeta_credito')
+    if metodo_pago not in dict(METODOS_PAGO):
+        return Response({'detail': 'Método de pago no válido'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    pedido = Pedido.objects.create(
+        cliente=usuario,
+        fecha_pedido=timezone.now().date(),
+        direccion_envio=usuario.direccion,
+        direccion_facturacion=usuario.direccion,
+        metodo_pago=metodo_pago,
+        precio_total=total_precio,
+        estado_pedido='pendiente'
+    )
+    
+    for item in carrito.productocarrito_set.all():
+        DetallePedido.objects.create(
+            pedido=pedido,
+            producto=item.producto,
+            cantidad=item.cantidad,
+            precio_unidad=item.producto.precio
+        )
+    
+    # Vaciar el carrito
+    carrito.productocarrito_set.all().delete()
+
+    return Response({'detail': 'Pedido creado con éxito'}, status=status.HTTP_201_CREATED)
+
+
 class ListDetallesPedidos(generics.ListCreateAPIView):
     queryset = DetallePedido.objects.all()
     serializer_class = DetallePedidoSerializer
@@ -168,44 +211,6 @@ class ListReembolsos(generics.ListCreateAPIView):
 class DetailedReembolsos(generics.RetrieveUpdateDestroyAPIView):
     queryset = Reembolso.objects.all()
     serializer_class = ReembolsoSerializer
-
-class ListReseñas(generics.ListCreateAPIView):
-    queryset = Reseña.objects.all()
-    serializer_class = ReseñaSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-
-class DetailedReseñas(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Reseña.objects.all()
-    serializer_class = ReseñaSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-
-@api_view(['POST'])
-def crear_reseña(request):
-    serializer = ReseñaSerializer(data=request.data)
-    if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-@api_view(['PUT'])
-def modificar_reseña(request, pk):
-    reseña = get_object_or_404(Reseña, pk=pk)
-    serializer = ReseñaSerializer(reseña, data=request.data, partial=True) 
-    if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-@api_view(['DELETE'])
-def eliminar_reseña(request, reseña_id):
-    reseña = get_object_or_404(Reseña, pk=reseña_id)
-    
-    # Verificar si el usuario es un administrador o el propietario de la reseña
-    if request.user.is_staff or request.user == reseña.cliente:
-        reseña.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-    else:
-        return Response({"error": "No tiene permiso para eliminar esta reseña."}, status=status.HTTP_403_FORBIDDEN)
 
 class ListCarritos(generics.ListCreateAPIView):
     queryset = Carrito.objects.all()

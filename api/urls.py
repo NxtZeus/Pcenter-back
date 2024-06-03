@@ -4,10 +4,11 @@ from .views import *
 urlpatterns = [
     path('usuarios/', ListUsuarios.as_view()),
     path('usuarios/detalles/', DetailedUsuarios.as_view()),
+    path('usuario/pedidos/', UsuarioPedidosView.as_view()),
 
     path('productos/', ListProductos.as_view()),
     path('productos/<int:pk>/', DetailedProductos.as_view()),
-    path('search/', ProductoSearchView.as_view(), name='product-search'),
+    path('search/', ProductoSearchView.as_view()),
     path('categorias/', list_categorias),
     path('añadir-producto/', añadir_producto),
     path('modificar-producto/<int:pk>/', modificar_producto),
@@ -21,15 +22,10 @@ urlpatterns = [
 
     path('detalles-pedidos/', ListDetallesPedidos.as_view()),
     path('detalles-pedidos/<int:pk>/', DetailedDetallesPedidos.as_view()),
+    path('pago/', pago),
 
     path('reembolsos/', ListReembolsos.as_view()),
     path('reembolsos/<int:pk>/', DetailedReembolsos.as_view()),
-
-    path('reseñas/', ListReseñas.as_view()),
-    path('reseñas/<int:pk>/', DetailedReseñas.as_view()),
-    path('reseñas/añadir_reseña/', crear_reseña),
-    path('reseñas/modificar_reseña/<int:pk>/', modificar_reseña),
-    path('reseñas/delete/<int:reseña_id>/', eliminar_reseña),
 
     path('carritos/', ListCarritos.as_view()),
     path('carritos/<int:pk>/', DetailedCarritos.as_view()),

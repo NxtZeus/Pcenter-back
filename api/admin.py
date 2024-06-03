@@ -84,11 +84,6 @@ class ReembolsoAdmin(admin.ModelAdmin):
     list_display = ['pedido', 'fecha_reembolso', 'precio_reembolso', 'motivo']
     search_fields = ['pedido__id']
 
-class ReseñaAdmin(admin.ModelAdmin):
-    list_display = ['producto', 'cliente', 'calificacion', 'fecha_reseña']
-    search_fields = ['producto__nombre_producto', 'cliente__email']
-    list_filter = ['calificacion']
-
 class CarritoAdmin(admin.ModelAdmin):
     list_display = ['usuario', 'creado_en']
     search_fields = ['usuario__email']
@@ -102,6 +97,5 @@ admin.site.register(Producto, ProductoAdmin)
 admin.site.register(Pedido, PedidoAdmin)
 admin.site.register(DetallePedido, DetallePedidoAdmin)
 admin.site.register(Reembolso, ReembolsoAdmin)
-admin.site.register(Reseña, ReseñaAdmin)
 admin.site.register(Carrito, CarritoAdmin)
 admin.site.register(ProductoCarrito, ProductoCarritoAdmin)
