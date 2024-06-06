@@ -7,7 +7,6 @@ from rest_framework import status
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework import permissions
 from django.contrib.auth.models import update_last_login
 from django.contrib.auth.hashers import make_password
 from django.db.models import Count
@@ -18,8 +17,12 @@ from rest_framework.filters import SearchFilter
 from rest_framework.parsers import MultiPartParser, FormParser
 
 class ListUsuarios(generics.ListCreateAPIView):
+    """
+    Lista y crea usuarios. Los usuarios solo pueden ver su propia información, a menos que sean superusuarios.
+    """
     serializer_class = UsuarioSerializer
     permission_classes = [IsAuthenticated]
+
     def get_queryset(self):
         user = self.request.user
         if user.is_superuser:
@@ -29,6 +32,9 @@ class ListUsuarios(generics.ListCreateAPIView):
         return queryset
 
 class DetailedUsuarios(generics.RetrieveUpdateDestroyAPIView):
+    """
+    Recupera, actualiza y elimina un usuario específico.
+    """
     serializer_class = UsuarioSerializer
     permission_classes = [IsAuthenticated]
 
@@ -40,7 +46,6 @@ class DetailedUsuarios(generics.RetrieveUpdateDestroyAPIView):
         serializer = self.get_serializer(user, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
 
-        # Verificar si se proporciona una nueva contraseña y actualizarla
         if 'password' in request.data and request.data['password']:
             user.set_password(request.data['password'])
             user.save()
@@ -52,6 +57,9 @@ class DetailedUsuarios(generics.RetrieveUpdateDestroyAPIView):
         return self.update(request, *args, **kwargs)
 
 class UsuarioPedidosView(generics.ListAPIView):
+    """
+    Lista los pedidos del usuario autenticado.
+    """
     serializer_class = PedidoSerializer
     permission_classes = [IsAuthenticated]
 
@@ -59,6 +67,9 @@ class UsuarioPedidosView(generics.ListAPIView):
         return Pedido.objects.filter(cliente=self.request.user)
 
 class ListProductos(generics.ListCreateAPIView):
+    """
+    Lista y crea productos. Permite cargar imágenes asociadas al producto.
+    """
     queryset = Producto.objects.all()
     serializer_class = ProductoSerializer
     parser_classes = (MultiPartParser, FormParser,)
@@ -84,10 +95,16 @@ class ListProductos(generics.ListCreateAPIView):
         return context
 
 class DetailedProductos(generics.RetrieveUpdateDestroyAPIView):
+    """
+    Recupera, actualiza y elimina un producto específico.
+    """
     queryset = Pedido.objects.all()
     serializer_class = PedidoSerializer
 
 class ProductoSearchView(generics.ListAPIView):
+    """
+    Permite la búsqueda de productos por nombre, descripción, categoría y marca.
+    """
     queryset = Producto.objects.all()
     serializer_class = ProductoSerializer
     filter_backends = [SearchFilter]
@@ -95,45 +112,63 @@ class ProductoSearchView(generics.ListAPIView):
 
 @api_view(['GET'])
 def list_categorias(request):
+    """
+    Lista todas las categorías de productos distintas.
+    """
     categorias = Producto.objects.values_list('categoria', flat=True).distinct()
     return Response(categorias)
 
 @api_view(['POST'])
 def añadir_producto(request):
-    if request.method == 'POST':
-        serializer = ProductoSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    """
+    Añade un nuevo producto a la base de datos.
+    """
+    serializer = ProductoSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['DELETE'])
 def eliminar_producto(request, pk):
-    if request.method == 'DELETE':
-        producto = get_object_or_404(Producto, id=pk)
-        producto.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+    """
+    Elimina un producto específico de la base de datos.
+    """
+    producto = get_object_or_404(Producto, id=pk)
+    producto.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
 
 @api_view(['PUT'])
 def modificar_producto(request, pk):
-    if request.method == 'PUT':
-        producto = get_object_or_404(Producto, id=pk)
-        serializer = ProductoSerializer(producto, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    """
+    Modifica un producto específico de la base de datos.
+    """
+    producto = get_object_or_404(Producto, id=pk)
+    serializer = ProductoSerializer(producto, data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class ListPedidos(generics.ListCreateAPIView):
+    """
+    Lista y crea pedidos.
+    """
     queryset = Pedido.objects.all()
     serializer_class = PedidoSerializer
 
 class DetailedPedidos(generics.RetrieveUpdateDestroyAPIView):
+    """
+    Recupera, actualiza y elimina un pedido específico.
+    """
     queryset = Pedido.objects.all()
     serializer_class = PedidoSerializer
 
 @api_view(['POST'])
 def crear_pedido(request):
+    """
+    Crea un nuevo pedido.
+    """
     serializer = PedidoSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
@@ -142,6 +177,9 @@ def crear_pedido(request):
 
 @api_view(['PUT'])
 def modificar_pedido(request, pk):
+    """
+    Modifica un pedido específico.
+    """
     pedido = get_object_or_404(Pedido, pk=pk)
     serializer = PedidoSerializer(pedido, data=request.data)
     if serializer.is_valid():
@@ -151,6 +189,9 @@ def modificar_pedido(request, pk):
 
 @api_view(['DELETE'])
 def eliminar_pedido(request, pk):
+    """
+    Elimina un pedido específico.
+    """
     pedido = get_object_or_404(Pedido, pk=pk)
     pedido.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
@@ -160,6 +201,9 @@ from django.utils import timezone
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def pago(request):
+    """
+    Procesa el pago de los productos en el carrito del usuario autenticado y crea un pedido.
+    """
     usuario = request.user
     carrito = get_object_or_404(Carrito, usuario=usuario)
     
@@ -190,45 +234,56 @@ def pago(request):
             precio_unidad=item.producto.precio
         )
     
-    # Vaciar el carrito
     carrito.productocarrito_set.all().delete()
 
     return Response({'detail': 'Pedido creado con éxito'}, status=status.HTTP_201_CREATED)
 
-
 class ListDetallesPedidos(generics.ListCreateAPIView):
+    """
+    Lista y crea detalles de pedidos.
+    """
     queryset = DetallePedido.objects.all()
     serializer_class = DetallePedidoSerializer
 
 class DetailedDetallesPedidos(generics.RetrieveUpdateDestroyAPIView):
+    """
+    Recupera, actualiza y elimina un detalle de pedido específico.
+    """
     queryset = DetallePedido.objects.all()
     serializer_class = DetallePedidoSerializer
 
-class ListReembolsos(generics.ListCreateAPIView):
-    queryset = Reembolso.objects.all()
-    serializer_class = ReembolsoSerializer
-
-class DetailedReembolsos(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Reembolso.objects.all()
-    serializer_class = ReembolsoSerializer
-
 class ListCarritos(generics.ListCreateAPIView):
+    """
+    Lista y crea carritos.
+    """
     queryset = Carrito.objects.all()
     serializer_class = CarritoSerializer
 
 class DetailedCarritos(generics.RetrieveUpdateDestroyAPIView):
+    """
+    Recupera, actualiza y elimina un carrito específico.
+    """
     queryset = Carrito.objects.all()
     serializer_class = CarritoSerializer
 
 class ListProductosCarrito(generics.ListCreateAPIView):
+    """
+    Lista y crea productos en el carrito.
+    """
     queryset = ProductoCarrito.objects.all()
     serializer_class = ProductoCarritoSerializer
 
 class DetailedProductosCarritos(generics.RetrieveUpdateDestroyAPIView):
+    """
+    Recupera, actualiza y elimina un producto específico del carrito.
+    """
     queryset = ProductoCarrito.objects.all()
     serializer_class = ProductoCarritoSerializer
 
 class AgregarAlCarrito(generics.CreateAPIView):
+    """
+    Agrega productos al carrito del usuario autenticado.
+    """
     permission_classes = [IsAuthenticated]
     serializer_class = ProductoCarritoSerializer
 
@@ -237,15 +292,12 @@ class AgregarAlCarrito(generics.CreateAPIView):
         cantidad = request.data.get('cantidad', 1)
         producto = get_object_or_404(Producto, id=producto_id)
 
-        # Verificar si el usuario tiene un carrito existente
         carrito, created = Carrito.objects.get_or_create(usuario=request.user)
 
-        # Asociar el carrito al usuario si es nuevo
         if created:
             carrito.usuario = request.user
             carrito.save()
 
-        # Crear o actualizar el ProductoCarrito
         producto_carrito, created = ProductoCarrito.objects.get_or_create(
             carrito=carrito,
             producto=producto,
@@ -258,6 +310,9 @@ class AgregarAlCarrito(generics.CreateAPIView):
         return Response(ProductoCarritoSerializer(producto_carrito).data, status=status.HTTP_201_CREATED)
 
 class VerCarrito(generics.RetrieveAPIView):
+    """
+    Muestra el carrito del usuario autenticado.
+    """
     permission_classes = [IsAuthenticated]
     serializer_class = CarritoSerializer
 
@@ -276,6 +331,9 @@ class VerCarrito(generics.RetrieveAPIView):
         return carrito
 
 class ActualizarCantidadCarrito(generics.UpdateAPIView):
+    """
+    Actualiza la cantidad de un producto en el carrito del usuario autenticado.
+    """
     permission_classes = [IsAuthenticated]
     serializer_class = ProductoCarritoSerializer
 
@@ -297,15 +355,15 @@ class ActualizarCantidadCarrito(generics.UpdateAPIView):
 
         return Response(ProductoCarritoSerializer(producto_carrito).data)
 
-
 class QuitarDeCarrito(generics.DestroyAPIView):
+    """
+    Elimina un producto del carrito del usuario autenticado.
+    """
     permission_classes = [IsAuthenticated]
 
     def delete(self, request, *args, **kwargs):
-        producto_id = self.kwargs.get('producto_id')  # Obtener el ID del producto de los parámetros de la URL
-
+        producto_id = self.kwargs.get('producto_id')
         producto = get_object_or_404(Producto, id=producto_id)
-
         carrito = get_object_or_404(Carrito, usuario=request.user)
         producto_carrito = get_object_or_404(ProductoCarrito, carrito=carrito, producto=producto)
         producto_carrito.delete()
@@ -314,6 +372,9 @@ class QuitarDeCarrito(generics.DestroyAPIView):
 
 @api_view(['POST'])
 def registro(request):
+    """
+    Registra un nuevo usuario.
+    """
     serializer = UsuarioSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
@@ -327,18 +388,19 @@ def registro(request):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def login(request):
+    """
+    Autentica a un usuario y devuelve un token de acceso.
+    """
     email = request.data.get('email')
     password = request.data.get('password')
 
     user = authenticate(request, username=email, password=password)
 
     if user is not None:
-        token, _ = Token.objects.get_or_create(user=user)  # Obtiene o crea el token
-        
-        # Serializa los datos del usuario, incluyendo el token
-        serializer = UsuarioSerializer(user)  
+        token, _ = Token.objects.get_or_create(user=user)
+        serializer = UsuarioSerializer(user)
         serializer_data = serializer.data
-        serializer_data['token'] = token.key  # Agrega el token manualmente
+        serializer_data['token'] = token.key
 
         return Response(serializer_data, status=status.HTTP_200_OK)
     else:
@@ -346,13 +408,14 @@ def login(request):
 
 @api_view(['POST'])
 def logout(request):
+    """
+    Cierra la sesión del usuario autenticado eliminando su token de acceso.
+    """
     if request.user.is_authenticated:
-        # El usuario está autenticado, podemos proceder con el cierre de sesión
         try:
             request.user.auth_token.delete()
             return Response({'result': 'Sesión cerrada'}, status=status.HTTP_200_OK)
         except Token.DoesNotExist:
             return Response({'result': 'Token no encontrado'}, status=status.HTTP_404_NOT_FOUND)
     else:
-        # El usuario no está autenticado, devolvemos un error adecuado
         return Response({'result': 'No autenticado'}, status=status.HTTP_401_UNAUTHORIZED)
