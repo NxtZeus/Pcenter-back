@@ -39,6 +39,7 @@ ALLOWED_HOSTS = ['localhost', 'tfg-backend-production-5a6a.up.railway.app']
 
 CSRF_TRUSTED_ORIGINS = ['localhost', 'https://tfg-backend-production-5a6a.up.railway.app']
 
+
 # Application definition
 
 INSTALLED_APPS = [
