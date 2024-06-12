@@ -53,16 +53,6 @@ class DetallePedidoSerializer(serializers.ModelSerializer):
         model = DetallePedido
         fields = '__all__'
 
-class ReembolsoSerializer(serializers.ModelSerializer):
-    """
-    Serializer para el modelo Reembolso. Incluye un nested serializer para el pedido.
-    """
-    pedido = PedidoSerializer(read_only=True)
-
-    class Meta:
-        model = Reembolso
-        fields = '__all__'
-
 class ProductoCarritoSerializer(serializers.ModelSerializer):
     """
     Serializer para el modelo ProductoCarrito. Incluye un nested serializer para el producto.

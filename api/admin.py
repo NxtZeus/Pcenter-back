@@ -106,13 +106,6 @@ class DetallePedidoAdmin(admin.ModelAdmin):
     list_display = ['pedido', 'producto', 'cantidad', 'precio_unidad']
     search_fields = ['pedido__id', 'producto__nombre_producto']
 
-class ReembolsoAdmin(admin.ModelAdmin):
-    """
-    Configuración de la interfaz de administración para el modelo Reembolso.
-    """
-    list_display = ['pedido', 'fecha_reembolso', 'precio_reembolso', 'motivo']
-    search_fields = ['pedido__id']
-
 class CarritoAdmin(admin.ModelAdmin):
     """
     Configuración de la interfaz de administración para el modelo Carrito.
@@ -132,6 +125,5 @@ admin.site.register(Usuario, UsuarioAdmin)
 admin.site.register(Producto, ProductoAdmin)
 admin.site.register(Pedido, PedidoAdmin)
 admin.site.register(DetallePedido, DetallePedidoAdmin)
-admin.site.register(Reembolso, ReembolsoAdmin)
 admin.site.register(Carrito, CarritoAdmin)
 admin.site.register(ProductoCarrito, ProductoCarritoAdmin)

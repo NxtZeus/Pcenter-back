@@ -4,14 +4,13 @@ from .managers import UsuarioManager
 
 # Métodos de pago disponibles
 METODOS_PAGO = (
-    ('efectivo', 'Efectivo'),
     ('tarjeta_credito', 'Tarjeta de Crédito'),
 )
 
 # Estados posibles para un pedido
 ESTADOS_PEDIDO = (
     ('pendiente', 'Pendiente'),
-    ('procesando', 'Procesando'),
+    ('procesado', 'Procesado'),
     ('enviado', 'Enviado'),
     ('entregado', 'Entregado'),
     ('cancelado', 'Cancelado'),
@@ -91,15 +90,6 @@ class DetallePedido(models.Model):
     producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
     cantidad = models.IntegerField()
     precio_unidad = models.DecimalField(max_digits=10, decimal_places=2)
-
-class Reembolso(models.Model):
-    """
-    Modelo para los reembolsos asociados a los pedidos.
-    """
-    pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE)
-    fecha_reembolso = models.DateField()
-    precio_reembolso = models.DecimalField(max_digits=10, decimal_places=2)
-    motivo = models.CharField(max_length=255)
 
 class Carrito(models.Model):
     """
