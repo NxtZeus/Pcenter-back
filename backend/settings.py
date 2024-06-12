@@ -102,6 +102,7 @@ TEMPLATES = [
 ]
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 WSGI_APPLICATION = 'backend.wsgi.application'
 
