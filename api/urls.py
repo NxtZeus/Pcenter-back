@@ -10,6 +10,7 @@ urlpatterns = [
     # Rutas para la gestión de productos
     path('productos/', ListProductos.as_view(), name='list-productos'),
     path('productos/<int:pk>/', DetailedProductos.as_view(), name='detailed-productos'),
+    path('pedidos/<int:pedidoId>/cancelar/', cancelarPedido, name='cancelar-pedido'),
     path('search/', ProductoSearchView.as_view(), name='producto-search'),
     path('categorias/', list_categorias, name='list-categorias'),
     path('añadir-producto/', añadir_producto, name='añadir-producto'),

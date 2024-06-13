@@ -187,6 +187,36 @@ def modificar_pedido(request, pk):
         return Response(serializer.data, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def cancelarPedido(request, pedidoId):
+    """
+    Cancela un pedido específico y restaura el stock de los productos asociados.
+    """
+    try:
+        pedido = Pedido.objects.get(pk=pedidoId)
+        
+        # Verifica si el usuario autenticado es el propietario del pedido
+        if pedido.cliente != request.user:
+            return Response({"detail": "No tienes permiso para cancelar este pedido"}, status=status.HTTP_403_FORBIDDEN)
+
+        if pedido.estado_pedido in ['cancelado', 'enviado']:
+            return Response({'error': f'El pedido no se puede cancelar porque está en estado {pedido.estado_pedido}.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        pedido.estado_pedido = 'cancelado'
+        pedido.save()
+
+        # Restaurar el stock de los productos
+        detalles_pedido = DetallePedido.objects.filter(pedido=pedido)
+        for detalle in detalles_pedido:
+            producto = detalle.producto
+            producto.stock += detalle.cantidad
+            producto.save()
+
+        return Response({'mensaje': 'Pedido cancelado y stock restaurado correctamente.'}, status=status.HTTP_200_OK)
+    except Pedido.DoesNotExist:
+        return Response({'error': 'No se encontró el pedido.'}, status=status.HTTP_404_NOT_FOUND)
+
 @api_view(['DELETE'])
 def eliminar_pedido(request, pk):
     """
