@@ -32,6 +32,17 @@ class UsuarioSerializer(serializers.ModelSerializer):
             'ciudad', 'pais', 'codigo_postal', 'telefono', 'is_active', 'is_staff', 'is_superuser'
         ]
 
+class DetallePedidoSerializer(serializers.ModelSerializer):
+    """
+    Serializer para el modelo DetallePedido. Incluye nested serializers para el pedido y el producto.
+    """
+    pedido = serializers.PrimaryKeyRelatedField(read_only=True)
+    producto = ProductoSerializer(read_only=True)
+
+    class Meta:
+        model = DetallePedido
+        fields = '__all__'
+
 class PedidoSerializer(serializers.ModelSerializer):
     """
     Serializer para el modelo Pedido. Incluye un nested serializer para el cliente (usuario).
@@ -41,17 +52,6 @@ class PedidoSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Pedido
-        fields = '__all__'
-
-class DetallePedidoSerializer(serializers.ModelSerializer):
-    """
-    Serializer para el modelo DetallePedido. Incluye nested serializers para el pedido y el producto.
-    """
-    pedido = PedidoSerializer(read_only=True)
-    producto = ProductoSerializer(read_only=True)
-
-    class Meta:
-        model = DetallePedido
         fields = '__all__'
 
 class ProductoCarritoSerializer(serializers.ModelSerializer):
