@@ -227,6 +227,11 @@ def pago(request):
     )
     
     for item in carrito.productocarrito_set.all():
+        if item.producto.stock < item.cantidad:
+            return Response({'detail': 'Producto sin stock suficiente'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        item.producto.stock -= item.cantidad
+        item.producto.save()
         DetallePedido.objects.create(
             pedido=pedido,
             producto=item.producto,
