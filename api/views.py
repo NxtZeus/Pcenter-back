@@ -194,6 +194,9 @@ def eliminar_pedido(request, pk):
     """
     pedido = get_object_or_404(Pedido, pk=pk)
     pedido.delete()
+    for detalle in pedido.detalles.all():
+        detalle.producto.stock += detalle.cantidad
+        detalle.producto.save()
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 from django.utils import timezone
