@@ -37,6 +37,7 @@ class PedidoSerializer(serializers.ModelSerializer):
     Serializer para el modelo Pedido. Incluye un nested serializer para el cliente (usuario).
     """
     cliente = UsuarioSerializer(read_only=True)
+    detalle_pedido = DetallePedidoSerializer(many=True, read_only=True)
     
     class Meta:
         model = Pedido
