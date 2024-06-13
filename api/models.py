@@ -91,6 +91,9 @@ class DetallePedido(models.Model):
     cantidad = models.IntegerField()
     precio_unidad = models.DecimalField(max_digits=10, decimal_places=2)
 
+    def __str__(self):
+        return f"Detalle del pedido {self.pedido.id} (Producto: {self.producto.nombre_producto}) - Cantidad: {self.cantidad} - Precio: {self.precio_unidad}"
+
 class Carrito(models.Model):
     """
     Modelo para los carritos de compra de los usuarios.
@@ -108,3 +111,6 @@ class ProductoCarrito(models.Model):
     carrito = models.ForeignKey(Carrito, on_delete=models.CASCADE)
     producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
     cantidad = models.IntegerField(default=1)
+    
+    def __str__(self):
+        return f"{self.cantidad} x {self.producto.nombre_producto} en el carrito de {self.carrito.usuario.username}"

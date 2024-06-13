@@ -69,7 +69,7 @@ CORS_ALLOWED_ORIGINS = [
      "http://localhost:5173",
      "http://127.0.0.1:5173",
      "https://tfg-backend-production-5a6a.up.railway.app",
-     "https://pcenter.vercel.app/",
+     "https://pcenter.vercel.app",
 ]
 
 MIDDLEWARE = [
