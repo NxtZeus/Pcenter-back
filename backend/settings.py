@@ -33,11 +33,12 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['localhost', 'tfg-backend-production-5a6a.up.railway.app']
 
 CSRF_TRUSTED_ORIGINS = ['http://localhost', 'https://tfg-backend-production-5a6a.up.railway.app']
+
 
 # Application definition
 
