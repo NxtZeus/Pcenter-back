@@ -35,9 +35,9 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', 'tfg-backend-production-5a6a.up.railway.app']
+ALLOWED_HOSTS = ['localhost', 'pcenter-back-production.up.railway.app']
 
-CSRF_TRUSTED_ORIGINS = ['http://localhost', 'https://tfg-backend-production-5a6a.up.railway.app']
+CSRF_TRUSTED_ORIGINS = ['http://localhost', 'https://pcenter-back-production.up.railway.app']
 
 
 # Application definition
@@ -68,7 +68,7 @@ REST_FRAMEWORK = {
 CORS_ALLOWED_ORIGINS = [
      "http://localhost:5173",
      "http://127.0.0.1:5173",
-     "https://tfg-backend-production-5a6a.up.railway.app",
+     "https://pcenter-back-production.up.railway.app",
      "https://pcenter.vercel.app",
 ]
 
