@@ -9,7 +9,6 @@ Este es el backend del proyecto PCenter, una aplicación de comercio electrónic
 - Gestión de usuarios y roles
 - Sistema de pedidos y productos
 - Gestión de carrito de compras
-- Sistema de reembolsos
 - CORS configurado para desarrollo y producción
 
 ## 🛠️ Tecnologías
